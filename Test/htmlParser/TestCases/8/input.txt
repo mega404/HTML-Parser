@@ -1,0 +1,3 @@
+ADD HEADING WITH TEXT "Test Case 8"
+ADD PARAGRAPH WITH TEXT "Lorem ipsum dolor sit amet consectetur." AND WITH COLOR "Cyan" AND WITH FONT "Arial" 
+ADD PARAGRAPH WITH TEXT "Click me" AND WITH LINK "http://youtube.com"

@@ -1,0 +1,4 @@
+ADD HEADING WITH TEXT "Start Test Case 3"
+ADD IMAGE WITH SOURCE "http://placekitten.com/200/300"
+ADD LINK WITH TEXT "Watch This" AND WITH LINK "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+ADD HEADING WITH TEXT "End Test Case 3"

@@ -1,0 +1,346 @@
+PARSER_BEGIN(Grammer)
+package htmlParser;
+import java.io.*;
+import save.HtmlFileManager;
+
+public class Grammer
+{
+  static String textHtml = "";
+
+  static String wordFont = "";
+
+  static String wordColor = "";
+
+  static String wordLink = "";
+
+  static boolean decoratedFlag = false;
+
+  public static void main(String [] args) throws Exception
+  {
+    Grammer grammer = new Grammer(System.in);
+    Grammer.input();
+  }
+}
+
+PARSER_END(Grammer)
+
+<* >
+SKIP :
+{
+  " "
+| "\n"
+| "\t"
+| "\r"
+}
+
+TOKEN :
+{
+  < QUOTE : "\"" >
+}
+
+TOKEN :
+{
+  < COMMAND :
+    "ADD"
+  | "E" >
+}
+
+TOKEN :
+{
+  < #ALPHANUMERIC :
+    [ "0"-"9" ]
+  | [ "a"-"z" ]
+  | [ "A"-"Z" ]
+  | "/"
+  | ":"
+  | "."
+  | "_"
+  | " "
+  | "?"
+  | "="
+  | "#"
+  | "&"
+  | "%"
+  | ","
+  | "-"
+  | "!" >
+}
+
+TOKEN :
+{
+  < NULL : "null" >
+}
+
+TOKEN :
+{
+  < #SENTENCE : < ALPHANUMERIC > (< ALPHANUMERIC >)* >
+}
+
+TOKEN :
+{
+  < ELEMENT :
+    "IMAGE"
+  | "HEADING"
+  | "PARAGRAPH"
+  | "LINK" >
+}
+
+TOKEN :
+{
+  < IMAGE : "WITH SOURCE " < QSQ > >
+}
+
+TOKEN :
+{
+  < DECORATED_TEXT :
+    < COLOR >
+  | < FONT >
+  | < TEXT > >
+}
+
+TOKEN :
+{
+  < LINK : "WITH LINK " < QUOTE > < SENTENCE > < QUOTE > >
+}
+
+TOKEN :
+{
+  < QSQ : < QUOTE > < SENTENCE > < QUOTE > >
+}
+
+TOKEN :
+{
+  < #COLOR : "WITH COLOR " < QUOTE > < SENTENCE > < QUOTE > >
+}
+
+TOKEN :
+{
+  < #TEXT : "WITH TEXT " < QUOTE > < SENTENCE > < QUOTE > >
+}
+
+TOKEN :
+{
+  < #FONT : "WITH FONT " < QUOTE > < SENTENCE > < QUOTE > >
+}
+
+TOKEN :
+{
+  < AND : "AND" >
+}
+
+String input() throws Exception :
+{
+  Token and, create, element, sentence, sentence2;
+  String output = "";
+}
+{
+  (
+    create = < COMMAND >
+    {}
+    {
+      if (!create.image.equals("ADD"))
+      {
+        HtmlFileManager.create(output, "template.html");
+        break;
+      }
+    }
+    element = < ELEMENT >
+    {}
+    {
+      String e = element.image;
+      textHtml = "";
+      wordFont = "";
+      wordLink = "";
+      wordColor = "";
+      if (e.equals("IMAGE"))
+      {
+        String text = img();
+        text += "\n";
+        output += text;
+      }
+      else if (e.equals("PARAGRAPH") || e.equals("HEADING"))
+      {
+        String text = "";
+        if (e.equals("PARAGRAPH"))
+        {
+          text += "<p ";
+        }
+        else
+        {
+          text += "<h1 ";
+        }
+        text += paragraph();
+        if (e.equals("PARAGRAPH")) 
+        text += "</p>\n";
+        else 
+        text += "</h1>\n";
+        output += text;
+      }
+      else if (e.equals("LINK"))
+      {
+        String text = link();
+        text += "\n";
+        output += text;
+        //  link();
+      }
+      else
+      {
+        break;
+      }
+    }
+  )*
+  < EOF >
+  {
+    return output;
+  }
+}
+
+String img() :
+{
+  Token t;
+  String hTML = "";
+}
+{
+  t = < IMAGE >
+  {}
+  {
+    String [ ] temp = t.image.split(" ", 3);
+    hTML += "<img src=\"";
+    hTML += temp [ 2 ].substring(1, temp [ 2 ].length() - 1);
+    hTML += "\"/>";
+    // System.out.println(wordWithHTML);
+  }
+  {
+    return hTML;
+  }
+}
+
+String paragraph() :
+{
+  Token t, sen;
+  String hTML = "";
+}
+{
+  handle_decorated_text()
+  (
+    (
+    < AND >
+    {}
+    {
+    }
+    )* 
+    handle_decorated_text()
+  )*
+  {
+    // hTML +="<p ";
+    if (wordColor.length() != 0 || wordFont.length() != 0)
+    {
+      hTML += "style=\"";
+      if (wordColor.length() != 0)
+      {
+        hTML += "color:";
+        hTML += wordColor;
+        hTML += ";";
+      }
+      if (wordFont.length() != 0)
+      {
+        hTML += "font-family:";
+        hTML += wordFont;
+        hTML += ";";
+      }
+      hTML += "\"";
+    }
+    hTML += ">";
+    hTML += textHtml;
+    //hTML += "</p>";
+    return hTML;
+  }
+}
+
+void handle_decorated_text() :
+{
+  Token t;
+}
+{
+  t = < DECORATED_TEXT >
+  {
+    String s;
+  }
+  {
+    decoratedFlag = true;
+    s = t.image;
+    String [ ] arrOfStr = s.split(" ", 3);
+    String w = arrOfStr [ 1 ];
+    String demo = arrOfStr [ 2 ];
+    if (w.equals("FONT"))
+    {
+      wordFont += demo.substring(1, demo.length() - 1);
+      // System.out.println(wordFont);
+    }
+    else if (w.equals("COLOR"))
+    {
+      wordColor += demo.substring(1, demo.length() - 1);
+      // System.out.println(wordColor);
+    }
+    else if (w.equals("TEXT"))
+    {
+      String [ ] temp = s.split(" ", 3);
+      textHtml += temp [ 2 ].substring(1, temp [ 2 ].length() - 1);
+    }
+  }
+}
+
+String link() :
+{
+  Token t = null, sen, and;
+  String hTML = "", s;
+}
+{
+  (
+    (
+      t = < LINK >
+    | handle_decorated_text()
+    )
+    {}
+    {
+      if (!decoratedFlag)
+      {
+        decoratedFlag = false;
+        s = t.image;
+        String [ ] mm = s.split(" ", 3);
+        wordLink = mm [ 2 ];
+      }
+      decoratedFlag = false;
+    }
+    (
+    < AND >
+    {}
+    {}
+    )*
+  )+
+  {
+    hTML += "<a href=";
+    hTML += wordLink;
+    if (wordColor.length() != 0 || wordFont.length() != 0)
+    {
+      hTML += " style=\"";
+      if (wordColor.length() != 0)
+      {
+        hTML += "color:";
+        hTML += wordColor;
+        hTML += ";";
+      }
+      if (wordFont.length() != 0)
+      {
+        hTML += "font-family:";
+        hTML += wordFont;
+        hTML += ";";
+      }
+      hTML += "\"";
+    }
+    hTML += ">";
+    hTML += textHtml;
+    hTML += "</a>";
+    return hTML;
+  }
+}

@@ -1,0 +1,4 @@
+ADD HEADING WITH TEXT "Start Test Case 4"
+ADD PARAGRAPH WITH TEXT "Lorem ipsum dolor sit amet consectetur adipisicing elit. Non, facilis." AND WITH COLOR "violet" AND WITH FONT "sans-serif"
+ADD IMAGE WITH SOURCE "http://placekitten.com/600/800"
+ADD IMAGE WITH SOURCE "http://placebear.com/600/800"
